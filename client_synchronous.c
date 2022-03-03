@@ -10,7 +10,7 @@
 #include <math.h>
 
 #define MAX_STRING_LEN    	256
-#define NUMBER_OF_MESSAGES	1000
+#define NUMBER_OF_MESSAGES	100
 #define BILLION				1000000000
 
 int main(int argc, char **argv)
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 		}
 		TM = (t2.tv_sec - t1.tv_sec) + (double)(t2.tv_nsec - t1.tv_nsec)/(double)BILLION;
 		times[i] = TM;
-		free(message_array[i]);
+		//free(message_array[i]);
 	}
 
     for(int i=0; i<NUMBER_OF_MESSAGES; i++){
