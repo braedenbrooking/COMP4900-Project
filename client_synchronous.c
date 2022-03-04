@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
 	coid = ConnectAttach(0,server_pid, server_chid, _NTO_SIDE_CHANNEL, 0);
 
-	int len = (int) pow(10, 3); // E.g., 1000 bytes.
+	int len = (int) pow(10, 8); // E.g., 1000 bytes.
 	char *str = malloc(len + 1);
 	memset(str, '*', len);
 	str[len] = '\0';
