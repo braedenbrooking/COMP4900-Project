@@ -16,7 +16,7 @@ TARGET = -Vgcc_ntox86_64
 
 CFLAGS += $(DEBUG) $(TARGET) -Wall -lm
 LDFLAGS+= $(DEBUG) $(TARGET) -lm
-BINS = client_synchronous server_synchronous client_asynchronous server_asynchronous
+BINS = client_synchronous server_synchronous asynchronous_message_passing
 all: $(BINS)
 
 clean:

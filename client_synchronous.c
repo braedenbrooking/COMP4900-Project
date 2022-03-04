@@ -10,12 +10,13 @@
 #include <math.h>
 
 #define MAX_STRING_LEN    	256
-#define NUMBER_OF_RUNS		100
+#define ORDER_OF_MAGNITUDE	3
+#define NUMBER_OF_RUNS		1000000
 #define BILLION				1E9
 
 int main(int argc, char **argv)
 {
-	int coid, fd;
+	int coid;
 	char rmsg[MAX_STRING_LEN];
 
 	if(argc < 3){
@@ -26,12 +27,12 @@ int main(int argc, char **argv)
 	pid_t server_pid = atoi(argv[1]);
 	int server_chid = atoi(argv[2]);
 
-	fd = open("/dev/random", O_RDONLY);
+	/*int fd = open("/dev/random", O_RDONLY);
 
 	if (fd == -1) {
 		printf("Error opening file\n");
 		exit(-1);
-	}
+	}*/
 
 //	char* message_array[NUMBER_OF_MESSAGES];
 //
@@ -43,7 +44,7 @@ int main(int argc, char **argv)
 
 	coid = ConnectAttach(0,server_pid, server_chid, _NTO_SIDE_CHANNEL, 0);
 
-	int len = (int) pow(10, 8); // E.g., 1000 bytes.
+	int len = (int) pow(10, ORDER_OF_MAGNITUDE); // E.g., 1000 bytes.
 	char *str = malloc(len + 1);
 	memset(str, '*', len);
 	str[len] = '\0';
@@ -69,7 +70,7 @@ int main(int argc, char **argv)
 
 	printf("%d B @ %lf s\n", len, result);
 
-	close(fd);
+	//close(fd);
 
 	return 0;
 }
