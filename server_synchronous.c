@@ -35,7 +35,7 @@ int main(void)
 
 	while(1){
 		rcvid = MsgReceive(chid, &rmsg, sizeof(rmsg), NULL);
-		printf("Message received: %s\n", rmsg);
+		//printf("Message received: %s\n", rmsg);
 		//char* replymsg = "1";
 		MsgReply(rcvid, EOK, str, strlen(str));
 	}
