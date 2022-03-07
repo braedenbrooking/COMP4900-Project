@@ -88,14 +88,14 @@ void client(pid_t server_pid) {
 	double TT = TD / COUNT / 2;
 
 	// Task level results.
-	// printf("\n%lf s\n\n", TT);
+	// printf("%lf s\n\n", TT);
 
 	double t = TD / COUNT;
 	double TH = t - TT;
 
-	// Signal handler level results
+	// Signal handler level results.
 	// Comment this out if running the task level test.
-	printf("\n%lf s\n\n", TH);
+	printf("%lf s\n\n", TH);
 }
 
 void server(pid_t client_pid) {
