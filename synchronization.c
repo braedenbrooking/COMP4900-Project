@@ -1,16 +1,21 @@
-// Task synchronization and event handling.
+// Task synchronization and event handling test.
 
+#include <time.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/neutrino.h>
+#include <sys/resource.h>
 
 #define COUNT	5
 #define BILLION	1E9
 
-void handler();
+int client_pid;
+
 void client(pid_t);
 void server(pid_t);
+void empty_handler();
+void handler(int);
 
 int main(int argc, char **argv) {
 	int pid, ppid;
@@ -27,10 +32,13 @@ int main(int argc, char **argv) {
 
 	if (pid == 0) {
 		// Child.
+		// Lower the priority of the server for signal handler level test.
+		setpriority(PRIO_PROCESS, ppid, 19);
 		client(ppid);
 	} else {
 		// Parent.
-		server(pid);
+		client_pid = pid;
+		server(client_pid);
 	}
 
 	return 0;
@@ -43,6 +51,7 @@ void client(pid_t server_pid) {
 	struct timespec t0, t1;
 
 	sigemptyset(&set);
+	signal(SIGUSR2, empty_handler);
 
 	if (clock_gettime(CLOCK_REALTIME, &t0) == -1) {
 		perror("clock_gettime");
@@ -51,8 +60,16 @@ void client(pid_t server_pid) {
 
 	for (int i = 0; i < COUNT; i++) {
 		sleep(1);
-		kill(server_pid, SIGUSR1);
-		printf("Sent SIGUSR1 to server.\n");
+
+		// Task level test.
+		// kill(server_pid, SIGUSR1);
+		// printf("Sent SIGUSR1 to server.\n");
+
+		// Signal handler level test.
+		// Comment this out if running the task level test.
+		kill(server_pid, SIGUSR2);
+		printf("Sent SIGUSR2 to server.\n");
+
 		printf("Client suspending...\n");
 		sigsuspend(&set);
 	}
@@ -62,15 +79,23 @@ void client(pid_t server_pid) {
 		exit(-1);
 	}
 
-	double TT = (t1.tv_sec - t0.tv_sec) + ((double) (t1.tv_nsec + t0.tv_nsec)) / BILLION;
+	// time_slept is the total number of seconds slept (i.e.,
+	// client and server each sleep 1s for every run). We need
+	// to subtract this amount from the total time taken to
+	// get the actual amount of time teken by the signal passing.
+	int time_slept = COUNT * 2;
+	double TD = ((t1.tv_sec - t0.tv_sec) + ((double) (t1.tv_nsec + t0.tv_nsec)) / BILLION) - time_slept;
+	double TT = TD / COUNT / 2;
 
-	// COUNT * 2 is the total number of seconds slept (i.e.,
-	// client and server each sleep 1s for every run). Subtract
-	// this amount from the total time taken to get the actual
-	// amount of time teken by the signal passing.
-	double result = (TT - (COUNT * 2)) / COUNT / 2;
+	// Task level results.
+	// printf("\n%lf s\n\n", TT);
 
-	printf("%lf s\n", result);
+	double t = TD / COUNT;
+	double TH = t - TT;
+
+	// Signal handler level results
+	// Comment this out if running the task level test.
+	printf("\n%lf s\n\n", TH);
 }
 
 void server(pid_t client_pid) {
@@ -79,14 +104,26 @@ void server(pid_t client_pid) {
 	sigset_t set;
 
 	sigemptyset(&set);
+	signal(SIGUSR2, handler);
 
 	while (1) {
 		printf("Server suspending...\n");
 		sigsuspend(&set);
-		sleep(1);
-		printf("Sent SIGUSR1 to client.\n");
-		kill(client_pid, SIGUSR1);
+
+		// Task level test.
+		// Comment this out if running the signal handler level test.
+		// sleep(1);
+		// kill(client_pid, SIGUSR1);
+		// printf("Sent SIGUSR1 to client.\n");
 	}
 }
 
-void handler() {}
+void empty_handler() {}
+
+void handler(int signum) {
+	if (signum == SIGUSR1) return;
+
+	sleep(1);
+	kill(client_pid, SIGUSR2);
+	printf("Sent SIGUSR2 to client.\n");
+}
