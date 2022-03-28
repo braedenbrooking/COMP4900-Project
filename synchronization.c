@@ -7,7 +7,7 @@
 #include <sys/neutrino.h>
 #include <sys/resource.h>
 
-#define COUNT	5
+#define COUNT	250 // Tests: 50, 100, 150, 200, 250.
 #define BILLION	1E9
 
 int client_pid;
@@ -20,7 +20,7 @@ void handler(int);
 int main(int argc, char **argv) {
 	int pid, ppid;
 
-	signal(SIGUSR1, handler);
+	signal(SIGUSR1, empty_handler);
 
 	pid = fork();
 	ppid = getppid();
@@ -33,7 +33,8 @@ int main(int argc, char **argv) {
 	if (pid == 0) {
 		// Child.
 		// Lower the priority of the server for signal handler level test.
-		setpriority(PRIO_PROCESS, ppid, 19);
+		// Comment this out if running the task level test.
+		// setpriority(PRIO_PROCESS, ppid, 19);
 		client(ppid);
 	} else {
 		// Parent.
@@ -51,7 +52,9 @@ void client(pid_t server_pid) {
 	struct timespec t0, t1;
 
 	sigemptyset(&set);
-	signal(SIGUSR2, empty_handler);
+
+	// Comment this out if running the task level test.
+	// signal(SIGUSR2, empty_handler);
 
 	if (clock_gettime(CLOCK_REALTIME, &t0) == -1) {
 		perror("clock_gettime");
@@ -62,13 +65,13 @@ void client(pid_t server_pid) {
 		sleep(1);
 
 		// Task level test.
-		// kill(server_pid, SIGUSR1);
-		// printf("Sent SIGUSR1 to server.\n");
+		kill(server_pid, SIGUSR1);
+		printf("Sent SIGUSR1 to server.\n");
 
 		// Signal handler level test.
 		// Comment this out if running the task level test.
-		kill(server_pid, SIGUSR2);
-		printf("Sent SIGUSR2 to server.\n");
+		// kill(server_pid, SIGUSR2);
+		// printf("Sent SIGUSR2 to server.\n");
 
 		printf("Client suspending...\n");
 		sigsuspend(&set);
@@ -84,18 +87,18 @@ void client(pid_t server_pid) {
 	// to subtract this amount from the total time taken to
 	// get the actual amount of time teken by the signal passing.
 	int time_slept = COUNT * 2;
-	double TD = ((t1.tv_sec - t0.tv_sec) + ((double) (t1.tv_nsec + t0.tv_nsec)) / BILLION) - time_slept;
+	printf("t = %f\n", (double)((t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) / BILLION));
+	double TD = ((double)((t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) / BILLION)) - time_slept;
 	double TT = TD / COUNT / 2;
 
 	// Task level results.
-	// printf("%lf s\n\n", TT);
-
-	double t = TD / COUNT;
-	double TH = t - TT;
+	printf("%lf us\n\n", TT);
 
 	// Signal handler level results.
 	// Comment this out if running the task level test.
-	printf("%lf s\n\n", TH);
+	// double t = TD / COUNT;
+	// double TH = t - TT;
+	// printf("%lf us\n\n", TH);
 }
 
 void server(pid_t client_pid) {
@@ -104,7 +107,9 @@ void server(pid_t client_pid) {
 	sigset_t set;
 
 	sigemptyset(&set);
-	signal(SIGUSR2, handler);
+
+	// Comment this out if running the task level test.
+	// signal(SIGUSR2, handler);
 
 	while (1) {
 		printf("Server suspending...\n");
@@ -112,9 +117,9 @@ void server(pid_t client_pid) {
 
 		// Task level test.
 		// Comment this out if running the signal handler level test.
-		// sleep(1);
-		// kill(client_pid, SIGUSR1);
-		// printf("Sent SIGUSR1 to client.\n");
+		sleep(1);
+		kill(client_pid, SIGUSR1);
+		printf("Sent SIGUSR1 to client.\n");
 	}
 }
 
