@@ -11,7 +11,7 @@
 #include <sys/neutrino.h>
 #include <sys/resource.h>
 
-#define COUNT		10E6
+#define COUNT		100E6 // Tests: 100E6, 250E6, 500E6, 750E6, 1E9.
 #define BILLION		1E9
 
 int main(int argc, char **argv) {
