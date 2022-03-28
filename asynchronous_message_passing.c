@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 
 	pid = fork();
 
-	if(pid != 0){
+	if(pid == 0){
 		server(first_pipefd[0], second_pipefd[1]);
 	}else{
 		client(first_pipefd[1], second_pipefd[0], pid);
