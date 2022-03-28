@@ -11,13 +11,13 @@
 #include <sys/neutrino.h>
 #include <sys/resource.h>
 
-#define COUNT	1E6
-#define BILLION	1E9
+#define COUNT		10E6
+#define BILLION		1E9
 
 int main(int argc, char **argv) {
 	pid_t pid;
-	struct timespec t0, t1;
 	double t, TA, TB, TD;
+	struct timespec t0, t1;
 	struct inheritance inherit;
 	char *argsInterweaving[] = { "task_switching_interweaving", NULL };
 
@@ -37,8 +37,9 @@ int main(int argc, char **argv) {
 		exit(-1);
 	}
 
-	t = (t1.tv_sec - t0.tv_sec) + ((double) (t1.tv_nsec + t0.tv_nsec)) / BILLION;
-	TA = t / COUNT / 2;
+	t = (double)((t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) / BILLION);
+	printf("t = %f\n", t);
+	TA = t / COUNT / 2; // Duration of one loop cycle plus task switch.
 
 	// Task creation.
 	if ((pid = spawn("task_switching_interweaving", 0, NULL, &inherit, argsInterweaving, environ)) == -1)
@@ -60,11 +61,12 @@ int main(int argc, char **argv) {
 		exit(-1);
 	}
 
-	t = (t1.tv_sec - t0.tv_sec) + ((double) (t1.tv_nsec + t0.tv_nsec)) / BILLION;
-	TB = t / COUNT;
-	TD = TB - TA;
+	t = (double)((t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) / BILLION);
+	printf("t = %f\n", t);
+	TB = t / COUNT; // Duration of one loop cycle.
+	TD = (TB - TA) * 1000000; // Multiply by 1000000 since we want the result in microseconds (us).
 
-	printf("%lf s\n", TD);
+	printf("%.10lf us\n", TD);
 
 	return 0;
 }
