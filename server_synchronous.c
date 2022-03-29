@@ -7,20 +7,18 @@
 #include <unistd.h>
 #include <math.h>
 
-#define MAX_STRING_LEN    256
+#define MAX_STRING_LEN		256
+#define ORDER_OF_MAGNITUDE	0 // Tests: 0, 1, 2, 3, 4. Remember to change client OOM.
 
-int main(void)
-{
-	//Declare variables
-	int chid, rcvid;
+int main(void) {
 	pid_t pid;
+	int chid, len, rcvid;
 	char rmsg[MAX_STRING_LEN];
 
-	//create a channel
 	chid = ChannelCreate(0);
 
-	if(chid == -1){
-		perror("ChannelCreate()");
+	if (chid == -1) {
+		perror("ChannelCreate");
 		exit(-1);
 	}
 
@@ -28,15 +26,13 @@ int main(void)
 
 	printf("chid = %d; pid = %d\n", chid, pid);
 
-	int len = (int) pow(10, 3); // E.g., 1000 bytes.
+	len = (int) pow(10, ORDER_OF_MAGNITUDE);
 	char *str = malloc(len + 1);
 	memset(str, '*', len);
 	str[len] = '\0';
 
-	while(1){
+	while (1) {
 		rcvid = MsgReceive(chid, &rmsg, sizeof(rmsg), NULL);
-		//printf("Message received: %s\n", rmsg);
-		//char* replymsg = "1";
 		MsgReply(rcvid, EOK, str, strlen(str));
 	}
 
