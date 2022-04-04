@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 	sigemptyset(&server_set);
 
 	signal(SIGUSR1, empty_handler);
-	signal(SIGUSR2, empty_handler);
+	signal(SIGUSR2, handler);
 
 	pid = fork();
 	ppid = getppid();
@@ -56,7 +56,8 @@ int main(int argc, char **argv) {
 void empty_handler() {}
 
 void handler(int signum) {
-	signal(SIGUSR2, SIG_DFL);
+	// Reset the handler so we don't recursively call this one.
+	signal(SIGUSR2, empty_handler);
 	kill(client_pid, SIGUSR2);
 }
 
@@ -104,6 +105,8 @@ void client(pid_t server_pid, sigset_t set) {
 	}
 
 	for (int i = 0; i < COUNT; i++) {
+		// Reset the handler.
+		signal(SIGUSR2, handler);
 		kill(server_pid, SIGUSR2);
 		sigsuspend(&set);
 	}
